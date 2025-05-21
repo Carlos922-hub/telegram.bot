@@ -3,3 +3,4 @@ httpx
 uvicorn
 python-multipart
 pillow
+python-telegram-bot
