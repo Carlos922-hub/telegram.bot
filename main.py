@@ -22,8 +22,10 @@ async def telegram_webhook(photo: UploadFile = None):
 
     width, height = image.size
 
+    # Konfiguracja
     texts = ["@BettingProInfo", "@bpadmin11"]
     colors = [(255, 255, 255, 45), (0, 0, 0, 40)]
+    watermark_count = random.randint(12, 24)
 
     font_size = int(min(width, height) * 0.045)
     try:
@@ -34,17 +36,13 @@ async def telegram_webhook(photo: UploadFile = None):
     watermark_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(watermark_layer)
 
-    # Losowa liczba watermarków (np. 10–20)
-    watermark_count = random.randint(10, 20)
-
     for _ in range(watermark_count):
-        x = random.randint(0, width - font_size * 10)
+        x = random.randint(0, width - int(font_size * 8))
         y = random.randint(int(height * 0.2), height - font_size)
         text = random.choice(texts)
         color = random.choice(colors)
         draw.text((x, y), text, font=font, fill=color)
 
-    # Stały obrót całej warstwy (lub też losowy, jeśli chcesz)
     rotated = watermark_layer.rotate(22, expand=1)
     watermark_cropped = rotated.crop(rotated.getbbox()).resize(image.size)
     watermarked = Image.alpha_composite(image, watermark_cropped)
