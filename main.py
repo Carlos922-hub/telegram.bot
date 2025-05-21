@@ -23,30 +23,30 @@ async def telegram_webhook(photo: UploadFile = None):
     text = "@BettingProInfo"
     width, height = image.size
 
-    # Dynamiczne skalowanie
-    font_size = int(min(width, height) * 0.035)  # ~3.5% wysokości zdjęcia
+    # Dynamiczna czcionka
+    font_size = int(min(width, height) * 0.045)
     try:
         font = ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
     except:
         font = ImageFont.load_default()
 
-    # Dynamiczne odstępy (więcej luzu na małych formatach)
-    spacing_x = int(width * 0.35)  # co 35% szerokości
-    spacing_y = int(height * 0.25)  # co 25% wysokości
+    # Odstępy
+    spacing_x = int(width * 0.30)
+    spacing_y = int(height * 0.20)
 
-    # Warstwa z watermarkiem
+    # Watermark layer
     watermark_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(watermark_layer)
 
     for x in range(0, width, spacing_x):
-        for y in range(0, height, spacing_y):
-            draw.text((x, y), text, font=font, fill=(255, 255, 255, 40))
+        for y in range(int(height * 0.35), height, spacing_y):  # zaczyna się od 35% wysokości
+            draw.text((x, y), text, font=font, fill=(255, 255, 255, 45))
 
-    # Obrót watermarka o 25°
-    rotated = watermark_layer.rotate(25, expand=1)
+    # Obrót siatki
+    rotated = watermark_layer.rotate(22, expand=1)
     watermark_cropped = rotated.crop(rotated.getbbox()).resize(image.size)
 
-    # Nałożenie na zdjęcie
+    # Połączenie
     watermarked = Image.alpha_composite(image, watermark_cropped)
 
     # Bufor i wysyłka
