@@ -25,7 +25,7 @@ async def telegram_webhook(photo: UploadFile = None):
     # Konfiguracja
     texts = ["@BettingProInfo", "@bpadmin11"]
     colors = [(255, 255, 255, 45), (0, 0, 0, 40)]
-    watermark_count = random.randint(12, 24)
+    watermark_count = random.randint(9, 18)
 
     font_size = int(min(width, height) * 0.045)
     try:
