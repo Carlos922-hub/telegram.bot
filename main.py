@@ -15,12 +15,15 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 @app.post("/")
 async def telegram_webhook(req: Request):
-    data = await req.json()
+    form = await req.form()
+file = form.get("photo")
 
-    message = data.get("message", {})
-    photo = message.get("photo", [])
-    if not photo:
-        return {"status": "no photo"}
+if file:
+    contents = await file.read()
+    image = Image.open(io.BytesIO(contents))
+    # Dalej watermark i publikacja...
+else:
+    return {"ok": False, "error": "No photo"}
 
     # get the highest resolution photo
     file_id = photo[-1]["file_id"]
