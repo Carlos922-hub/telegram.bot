@@ -1,54 +1,37 @@
-
-from fastapi import FastAPI, Request
-import httpx
-from PIL import Image
-from io import BytesIO
+from fastapi import FastAPI, Request, UploadFile, Form
+from fastapi.responses import JSONResponse
+from PIL import Image, ImageDraw, ImageFont
+import io
 import os
+import telegram
+import asyncio
 
 app = FastAPI()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-TARGET_CHANNEL = os.getenv("TARGET_CHANNEL")  # e.g. "@kanalYYY"
-WATERMARK_PATH = "telegram_watermark_light.png"
+BOT_TOKEN = "8108835149:AAGaPsopra8CtGHp8KI3dgn3lJXB9AjOqio"
+CHANNEL = "2642923411"
 
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+bot = telegram.Bot(token=BOT_TOKEN)
 
 @app.post("/")
-async def telegram_webhook(req: Request):
-    form = await req.form()
-file = form.get("photo")
+async def telegram_webhook(photo: UploadFile = None):
+    if not photo:
+        return {"ok": False, "error": "No photo received"}
 
-if file:
-    contents = await file.read()
+    contents = await photo.read()
     image = Image.open(io.BytesIO(contents))
-    # Dalej watermark i publikacja...
-else:
-    return {"ok": False, "error": "No photo"}
 
-    # get the highest resolution photo
-    file_id = photo[-1]["file_id"]
+    # dodanie watermarka
+    watermark = "@BettingProInfo"
+    font = ImageFont.truetype("arial.ttf", 28)
+    draw = ImageDraw.Draw(image)
+    draw.text((10, 10), watermark, font=font, fill=(0, 0, 0, 128))
 
-    async with httpx.AsyncClient() as client:
-        file_info = await client.get(f"{TELEGRAM_API_URL}/getFile?file_id={file_id}")
-        file_path = file_info.json()["result"]["file_path"]
+    # zapisz do bufora
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    buf.seek(0)
 
-        file_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
-        file_data = await client.get(file_url)
-        image = Image.open(BytesIO(file_data.content)).convert("RGBA")
-
-        # Load watermark
-        watermark = Image.open(WATERMARK_PATH).convert("RGBA")
-        wm_resized = watermark.resize(image.size)
-        image_with_wm = Image.alpha_composite(image, wm_resized)
-
-        # Send image to target channel
-        buffer = BytesIO()
-        image_with_wm.save(buffer, format="PNG")
-        buffer.seek(0)
-
-        files = {"photo": ("image.png", buffer, "image/png")}
-        data = {"chat_id": TARGET_CHANNEL}
-
-        await client.post(f"{TELEGRAM_API_URL}/sendPhoto", data=data, files=files)
-
-    return {"status": "ok"}
+    # wyślij do kanału
+    await bot.send_photo(chat_id=CHANNEL, photo=buf)
+    return {"ok": True}
