@@ -9,7 +9,7 @@ import asyncio
 app = FastAPI()
 
 BOT_TOKEN = "8108835149:AAGaPsopra8CtGHp8KI3dgn3lJXB9AjOqio"
-CHANNEL = "2642923411"
+CHANNEL = 1002642923411
 
 bot = telegram.Bot(token=BOT_TOKEN)
 
