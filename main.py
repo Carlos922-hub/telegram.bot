@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from PIL import Image, ImageDraw, ImageFont
 import io
 import telegram
+import random
 
 app = FastAPI()
 
@@ -20,33 +21,30 @@ async def telegram_webhook(photo: UploadFile = None):
     image = Image.open(io.BytesIO(contents)).convert("RGBA")
 
     width, height = image.size
-    texts = ["@BettingProInfo", "@bpadmin11"]
-    kolory = [(255, 255, 255, 45), (0, 0, 0, 40)]  # jasny / ciemny
 
-    # Dynamiczna czcionka
+    texts = ["@BettingProInfo", "@bpadmin11"]
+    colors = [(255, 255, 255, 45), (0, 0, 0, 40)]
+
     font_size = int(min(width, height) * 0.045)
     try:
         font = ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
     except:
         font = ImageFont.load_default()
 
-    # Odstępy i minimum siatki
-    min_columns = 3
-    min_rows = 4
-    spacing_x = max(int(width / min_columns), 250)
-    spacing_y = max(int(height / min_rows), 150)
-    watermark_start_y = int(height * 0.25)
-
     watermark_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(watermark_layer)
 
-    for i, x in enumerate(range(0, width, spacing_x)):
-        for j, y in enumerate(range(watermark_start_y, height, spacing_y)):
-            offset_y = int(spacing_y * 0.4) if (i % 2 == 1) else 0
-            text = texts[(i + j) % 2]
-            color = kolory[(i + j) % 2]
-            draw.text((x, y + offset_y), text, font=font, fill=color)
+    # Losowa liczba watermarków (np. 10–20)
+    watermark_count = random.randint(10, 20)
 
+    for _ in range(watermark_count):
+        x = random.randint(0, width - font_size * 10)
+        y = random.randint(int(height * 0.2), height - font_size)
+        text = random.choice(texts)
+        color = random.choice(colors)
+        draw.text((x, y), text, font=font, fill=color)
+
+    # Stały obrót całej warstwy (lub też losowy, jeśli chcesz)
     rotated = watermark_layer.rotate(22, expand=1)
     watermark_cropped = rotated.crop(rotated.getbbox()).resize(image.size)
     watermarked = Image.alpha_composite(image, watermark_cropped)
